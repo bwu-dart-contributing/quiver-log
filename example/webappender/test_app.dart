@@ -1,5 +1,5 @@
-import 'package:quiver_log/log.dart';
-import 'package:quiver_log/web.dart';
+import 'package:bwu_log/log.dart';
+import 'package:bwu_log/web.dart';
 import 'package:logging/logging.dart';
 
 

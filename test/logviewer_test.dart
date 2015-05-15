@@ -1,11 +1,11 @@
-library quiver.log.logviewer_test;
+library bwu_log.test.logviewer;
 
 import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:mock/mock.dart' as mock;
 import 'package:matcher/matcher.dart';
-import 'package:quiver_log/components/logviewer_controller.dart';
-import 'package:unittest/unittest.dart';
+import 'package:bwu_log/components/logviewer_controller.dart';
+import 'package:test/test.dart';
 
 main() {
   group('Filter', () {
@@ -234,7 +234,7 @@ main() {
       mockView.when(mock.callsTo('consistentScrollingDuringMutation', anything))
           .alwaysCall((x) => x());
 
-      var controller = new LogViewerController(mockView);
+      // var controller = new LogViewerController(mockView); // TODO check what this was intended for
       // Now send a few log messages...
       var logger = new Logger(logName);
       logger.info('Tracer Tong is here');

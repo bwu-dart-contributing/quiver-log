@@ -13,16 +13,14 @@
 // limitations under the License.
 
 
-part of quiver.log;
+part of bwu_log;
 
-/**
- * Appenders define output vectors for logging messages. An appender can be
- * used with multiple [Logger]s, but can use only a single [Formatter]. This
- * class is designed as base class for other Appenders to extend.
- *
- * Generally an Appender recieves a log message from the attached logger
- * streams, runs it through the formatter and then outputs it.
- */
+/// Appenders define output vectors for logging messages. An appender can be
+/// used with multiple [Logger]s, but can use only a single [Formatter]. This
+/// class is designed as base class for other Appenders to extend.
+///
+/// Generally an Appender recieves a log message from the attached logger
+/// streams, runs it through the formatter and then outputs it.
 abstract class Appender<T> {
   final List<StreamSubscription> _subscriptions = [];
   final Formatter<T> formatter;

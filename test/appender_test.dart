@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-library quiver.log.appender_test;
+library bwu_log.test.appender;
 
 import 'dart:async';
 import 'package:logging/logging.dart';
-import 'package:quiver_log/log.dart';
-import 'package:unittest/unittest.dart';
+import 'package:bwu_log/log.dart';
+import 'package:test/test.dart';
 
 main() {
   group('Appender', (){

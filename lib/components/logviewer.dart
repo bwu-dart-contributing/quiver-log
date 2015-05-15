@@ -1,10 +1,10 @@
-library logviewer;
+library bwu_log.components.logviewer;
 
 import 'dart:async';
 import 'dart:html';
 import 'package:polymer/polymer.dart';
 import 'package:logging/logging.dart';
-import './logviewer_controller.dart';
+import 'logviewer_controller.dart';
 
 @CustomTag('log-viewer')
 class LogViewer extends PolymerElement  {
@@ -36,7 +36,7 @@ class LogViewer extends PolymerElement  {
     }
 
     var log = shadowRoot.querySelector("#logMessages");
-    
+
     // We want to keep the person scrolled to the bottom, but only if they're
     // already scrolled to the bottom. It'd be annoying to have to pause your
     // application in the debugger to read some log messages.

@@ -1,16 +1,22 @@
-name: quiver_log
+name: bwu_log
 version: 1.0.3
-author: Adam Bender <bendera@google.com>
-description: A logging utility for Dart, part of the quiver utilities
-homepage: https://github.com/google/quiver-log
+authors:
+- Günter Zöchbauer <guenter@gzoechbauer.com>
+- Adam Bender <bendera@google.com>
+description: A logging utility for Dart
+homepage: https://github.com/bwu-dart/bwu_log
 environment:
-  sdk: '>=0.8.7'
-documentation: http://google.github.io/quiver-log/
+  sdk: '>=1.9.0'
 dependencies:
-  intl: '>=0.9.9'
-  logging: '>=0.9.0'
-  path: '>=1.1.0'
-  polymer: '>=0.8.10'
+  intl: ^0.12.3
+  logging: ^0.11.0
+  path: ^1.1.0
+  polymer: ^0.16.3+2
+
 dev_dependencies:
-  unittest: '>=0.10.0'
-  mock: '>=0.10.0'
+  mock: ^0.12.0-beta.0
+  test: ^0.12.0
+  grinder: ^0.7.0
+
+dependency_overrides:
+  logging: ^0.11.0

@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-library quiver.log.formatter_test;
+library bwu_log.test.formatter;
 
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
-import 'package:quiver_log/log.dart';
-import 'package:unittest/unittest.dart';
+import 'package:bwu_log/log.dart';
+import 'package:test/test.dart';
 
 main() {
   group('BasicLogFormatter', (){
      test('correctly formats LogRecord', (){
        LogRecord record =
            new LogRecord(Level.INFO, 'formatted message!', 'root');
-       var dateFormat = new DateFormat("MMyy HH:mm:ss.S");
+       // var dateFormat = new DateFormat("MMyy HH:mm:ss.S"); // TODO check what this was intended for
        var formatRegexp =
            new RegExp(r'\d\d \d\d:\d\d:\d\d.\d\d\d INFO \d root+ formatted message!');
        print(BASIC_LOG_FORMATTER.call(record));

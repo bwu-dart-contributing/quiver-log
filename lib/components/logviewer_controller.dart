@@ -1,4 +1,4 @@
-library logviewer.controller;
+library bwu_log.components.logviewer.controller;
 
 import 'dart:async';
 import 'package:logging/logging.dart';
@@ -21,8 +21,7 @@ class Filter {
   DateTime _minDate;
   DateTime _maxDate;
 
-  Filter() : id = _nextId++ {
-  }
+  Filter() : id = _nextId++;
 
   Filter.parse(String text) : id = _nextId++ {
     var parts = text.split(':');
@@ -74,11 +73,11 @@ class Filter {
     }
     _messageExact = _rawMatcher = text;
   }
-  
+
   static List<Filter> parseAll(String str) {
     var filters = [];
     int i = 0;
-    
+
     /// Returns [escaped string, non-escaped string]
     List<String> parseDelimited() {
       var delimiter = str[i];
@@ -125,7 +124,7 @@ class Filter {
         i++;
         invert = true;
       }
-      
+
       if (str[i] == '/') {
         var pair = parseDelimited();
         var regex = pair[0];
@@ -136,7 +135,7 @@ class Filter {
           .._invert = invert);
         continue;
       }
-      
+
       if (str[i] == '"') {
         var pair = parseDelimited();
         var exact = pair[0];
@@ -163,7 +162,7 @@ class Filter {
     return filters;
   }
 
-  static const String DART_SUFFIX = ".dart";
+  static const String dartSuffix = ".dart";
   bool match(LogRecord record) {
     bool matches = true;
     if (_messageExact != null && record.message.indexOf(_messageExact) < 0) {
@@ -193,13 +192,13 @@ class Filter {
       // Dart stacktraces are root -> tip, most recent call last.
       // Each line contains the relevant source file's full path.
       String stacktrace = record.stackTrace.toString();
-      if (!_fileName.endsWith(DART_SUFFIX)) {
-        _fileName = "$_fileName$DART_SUFFIX";
+      if (!_fileName.endsWith(dartSuffix)) {
+        _fileName = "$_fileName$dartSuffix";
       }
 
       // It's easier to tell if the filenames end at the same place than if
       // they begin at the same place.
-      var offset = stacktrace.lastIndexOf(DART_SUFFIX) + DART_SUFFIX.length;
+      var offset = stacktrace.lastIndexOf(dartSuffix) + dartSuffix.length;
       var fileoffset = stacktrace.lastIndexOf(_fileName) + _fileName.length;
       if (offset != fileoffset) {
         matches = false;
@@ -262,7 +261,7 @@ class LogViewerController {
   LogViewerController(this.view) {
     logMayHaveChanged();
   }
-  
+
   void logMayHaveChanged() {
     String newLog = view.logName;
     if (_log == newLog) {
@@ -274,7 +273,7 @@ class LogViewerController {
     _sub = new Logger(newLog).onRecord.listen(appendRecord);
     _log = newLog;
   }
-  
+
   void appendRecord(LogRecord logRecord) {
     _logs.add(logRecord);
     for (var filter in filters) {
@@ -288,7 +287,7 @@ class LogViewerController {
   void killFilter(int filterId) {
     filters.removeWhere((filter) => filter.id == filterId);
     view.showFilters(filters);
-    
+
     // TODO: stay scrolled to roughly the same place.
     view.messages.clear();
     view.messages.addAll(_logs.where((record) => !filters.any((filter) => !filter.match(record))));

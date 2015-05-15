@@ -12,18 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-library quiver.log.webappender_test;
+@TestOn('browser')
+library bwu_log.test.webappender;
 
 import 'dart:html';
 
 import 'package:logging/logging.dart';
-import 'package:quiver_log/web.dart';
-import 'package:unittest/html_config.dart';
-import 'package:unittest/unittest.dart';
-import 'package:quiver_log/log.dart';
+import 'package:bwu_log/web.dart';
+import 'package:test/test.dart';
+import 'package:bwu_log/log.dart';
 
 main() {
-  useHtmlConfiguration();
   WebAppender webAppender;
   Logger logger;
   FakeConsole fakeConsole;

@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-library quiver.log.web;
+library bwu_log.web;
 import 'dart:html';
-import 'package:quiver_log/log.dart';
+import 'package:bwu_log/log.dart';
 import 'package:logging/logging.dart';
 import 'dart:collection';
 

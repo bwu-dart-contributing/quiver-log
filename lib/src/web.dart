@@ -1,4 +1,4 @@
-part of quiver.log.web;
+part of bwu_log.web;
 
 /**
  * Takes advantage of console logging methods to improve logging filterability.

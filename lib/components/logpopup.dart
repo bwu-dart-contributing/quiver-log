@@ -1,4 +1,4 @@
-library logpopup;
+library bwu_log.components.logpopup;
 
 import 'package:polymer/polymer.dart';
 
@@ -15,17 +15,17 @@ import 'package:polymer/polymer.dart';
 // * Reduce noise option. Hide log entries with this message / call site.
 // * Resizable window.
 
-/**
- * A LogPopup is a small button that hovers somewhere in your application.
- * Clicking on it opens a log window.
- */
+/// A LogPopup is a small button that hovers somewhere in your application.
+/// Clicking on it opens a log window.
 @CustomTag("log-popup")
 class LogPopup extends PolymerElement {
-  /** The name of the log to listen to. Attribute. */
+  /// The name of the log to listen to. Attribute.
   @published String log = "";
-  /** The width of the popped-out window, using standard CSS-style units. Attribute. */
+  /// The width of the popped-out window, using standard CSS-style units.
+  /// Attribute.
   @published String windowWidth = "500px";
-  /** The height of the popped-out window, using standard CSS-style units. Attribute. */
+  /// The height of the popped-out window, using standard CSS-style units.
+  /// Attribute.
   @published String windowHeight = "350px";
   @observable bool expanded = false;
   @observable String logDisplay;
@@ -42,7 +42,7 @@ class LogPopup extends PolymerElement {
     }
     _display();
   }
-  
+
   void toggle() {
     expanded = !expanded;
     _display();
