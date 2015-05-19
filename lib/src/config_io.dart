@@ -5,6 +5,46 @@ import 'package:path/path.dart' as path;
 import 'package:bwu_log/bwu_log.dart' as log;
 import 'package:yaml/yaml.dart';
 import 'package:bwu_log/src/syslog_appender.dart';
+import 'package:collection/wrappers.dart';
+
+final Map<String, log.Formatter> _formatters = <String, log.Formatter>{
+  'Default': const SimpleSyslogFormatter(),
+  'Simple': const SimpleSyslogFormatter(),
+}..addAll(log.formatters);
+
+Map<String, log.Formatter> get formatters =>
+    new UnmodifiableMapView(_formatters);
+
+void registerFormatter(String name, log.Formatter factory, {override: false}) {
+  final bool exists = _formatters[name] != null;
+  if (exists && !override) {
+    throw 'Formatter "${name}" is already registers. You can use "override: true" to force override.';
+  }
+  _formatters[name] = factory;
+}
+
+log.Formatter removeFormatter(String name) => _formatters.remove(name);
+
+final Map<String, log.AppenderFactory> _appenderFactories =
+    <String, log.AppenderFactory>{
+  'Default': ([Map config]) => new SyslogAppender(new SyslogAppenderConfig(config)),
+  'Syslog': ([Map config]) => new SyslogAppender(new SyslogAppenderConfig(config)),
+}..addAll(log.appenderFactories);
+
+Map<String, log.AppenderFactory> get appenderFactories =>
+    new UnmodifiableMapView(_appenderFactories);
+
+void registerAppenderFactory(String name, log.AppenderFactory factory,
+    {override: false}) {
+  final bool exists = _appenderFactories[name] != null;
+  if (exists && !override) {
+    throw 'Formatter "${name}" is already registers. You can use "override: true" to force override.';
+  }
+  _appenderFactories[name] = factory;
+}
+
+log.AppenderFactory removeAppenderFactory(String name) =>
+    _appenderFactories.remove(name);
 
 IoConfig _logConfig;
 IoConfig get logConfig {
@@ -14,11 +54,14 @@ IoConfig get logConfig {
   return _logConfig;
 }
 
-class IoConfig extends log.DefaultConfig {
-  static const _ioFormatters = const {'SimpleSyslog': SIMPLE_SYSLOG_FORMATTER};
+class IoConfig extends log.LogConfig {
+  static const _ioFormatters = const {
+    'SimpleSyslog': SyslogAppenderConfig.defaultFormatter
+  };
 
   static final _ioAppenderFactories = {
-    'Syslog': (log.Formatter formatter) => new SyslogAppender(formatter),
+    'Syslog':
+        (SyslogAppenderConfig config) => new SyslogAppender.fromConfig(config),
   };
 
   IoConfig._() : super.protected() {

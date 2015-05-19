@@ -3,24 +3,23 @@ active: ${LOG_CONFIG}
 configurations:
   default:
     appender: Syslog
-    max_message_length: 2048 # min 480, default 2048
-    transgression_action: split # or truncate
-    protocol: tcp # or udp
+    appender_config:
+      transport: udp # tcp, default udp
+      transport_config:
+        host: localhost
+        port: 514
+        max_message_length: 2048 # min 480, default 2048
+        transgression_action: split # or truncate
+      formatter: SimpleSyslog
     filter:
 
   print:
     appender: Print
-    max_message_length: 2048 # min 480, default 2048
-    transgression_action: split # or truncate
-    protocol: tcp # or udp
     filter:
 
-  syslog:
-    appender: Syslog
-    # formatter: SimpleSyslog
-    # max_message_length: 2048 # min 480, default 2048
-    # transgression_action: split # or truncate
-    # protocol: tcp # or udp
-    # host: localhost
-    # port: 514
-    # filter:
+  file:
+    appender: File
+    file_path: log/app.log
+    rotate_days: 1
+    rotate_size: 10M
+

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 part of bwu_log;
 
 /// Appenders define output vectors for logging messages. An appender can be
@@ -23,24 +22,24 @@ part of bwu_log;
 /// streams, runs it through the formatter and then outputs it.
 abstract class Appender<T> {
   final List<StreamSubscription> _subscriptions = [];
-  final Formatter<T> formatter;
+  final AppenderConfig configuration;
 
-  Appender(this.formatter);
+  Appender(this.configuration);
 
   //TODO(bendera): What if we just handed in the stream? Does it need to be a
   //Logger or just a stream of LogRecords?
   /**
    * Attaches a logger to this appender
    */
-  attachLogger(Logger logger) =>
-    _subscriptions.add(logger.onRecord.listen((LogRecord r) {
-      try {
-        append(r, formatter);
-      } catch(e) {
-        //will keep the logger from downing the app, how best to notify the
-        //app here?
-      }
-     }));
+  attachLogger(Logger logger) => _subscriptions.add(logger.onRecord
+      .listen((LogRecord r) {
+    try {
+      append(r, configuration.formatter);
+    } catch (e) {
+      //will keep the logger from downing the app, how best to notify the
+      //app here?
+    }
+  }));
 
   /**
    * Each appender should implement this method to perform custom log output.
@@ -72,7 +71,7 @@ abstract class FormatterBase<T> {
 /**
  * Formats log messages using a simple pattern
  */
-class BasicLogFormatter implements FormatterBase<String>{
+class BasicLogFormatter implements FormatterBase<String> {
   static final DateFormat _dateFormat = new DateFormat("yyMMdd HH:mm:ss.S");
 
   const BasicLogFormatter();
@@ -81,8 +80,7 @@ class BasicLogFormatter implements FormatterBase<String>{
    *
    * MMyy HH:MM:ss.S level sequence loggerName message
    */
-  String call(LogRecord record) =>
-      "${_dateFormat.format(record.time)} "
+  String call(LogRecord record) => "${_dateFormat.format(record.time)} "
       "${record.level} "
       "${record.sequenceNumber} "
       "${record.loggerName} "
@@ -90,36 +88,66 @@ class BasicLogFormatter implements FormatterBase<String>{
 }
 
 /**
- * Default instance of the BasicLogFormatter
- */
-const BASIC_LOG_FORMATTER = const BasicLogFormatter();
-
-/**
  * Appends string messages to the console using print function
  */
-class PrintAppender extends Appender<String>{
+class PrintAppender extends Appender<String> {
+  @override
+  PrintAppenderConfig get configuration => super.configuration;
 
   /**
    * Returns a new ConsoleAppender with the given [Formatter<String>]
    */
-  PrintAppender(Formatter<String> formatter) : super(formatter);
+  factory PrintAppender([PrintAppenderConfig config]) {
+    if(config == null) config = new PrintAppenderConfig();
+    return new PrintAppender._(config);
+  }
+
+  PrintAppender._(PrintAppenderConfig configuration) : super(configuration);
 
   void append(LogRecord record, Formatter<String> formatter) =>
       print(formatter(record));
+}
+
+class PrintAppenderConfig extends AppenderConfig {
+  static const defaultConfig = const {'formatter': const BasicLogFormatter()};
+  Map _configuration;
+  PrintAppenderConfig([this._configuration]) {
+    if (_configuration == null) {
+      _configuration = defaultConfig;
+    }
+  }
+
+  Formatter get formatter => _configuration['formatter'] != null
+      ? _configuration['formatter']
+      : defaultConfig['formatter'];
 }
 
 /**
  * Appends string messages to the messages list. Note that this logger does not
  * ever truncate so only use for diagnostics or short lived applications.
  */
-class InMemoryListAppender extends Appender<Object>{
+class InMemoryListAppender extends Appender<Object> {
   final List<Object> messages = [];
 
   /**
    * Returns a new InMemoryListAppender with the given [Formatter<String>]
    */
-  InMemoryListAppender(Formatter<Object> formatter) : super(formatter);
+  InMemoryListAppender(InMemoryListAppenderConfig config) : super(config);
 
   void append(LogRecord record, Formatter<Object> formatter) =>
       messages.add(formatter(record));
+}
+
+class InMemoryListAppenderConfig extends AppenderConfig {
+  static const defaultConfig = const {'formatter': const BasicLogFormatter()};
+  Map _configuration;
+  InMemoryListAppenderConfig([this._configuration]) {
+    if (_configuration == null) {
+      _configuration = defaultConfig;
+    }
+  }
+
+  Formatter get formatter => _configuration['formatter'] != null
+      ? _configuration['formatter']
+      : defaultConfig['formatter'];
 }
