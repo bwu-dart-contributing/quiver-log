@@ -1,0 +1,5 @@
+log_appender: syslog
+max_message_length: 2048 # min 480, default 2048
+transgression_action: split # or truncate
+protocol: tcp # or udp
+filter:

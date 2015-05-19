@@ -13,8 +13,12 @@
 // limitations under the License.
 
 library bwu_log;
+
 import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
+import 'package:collection/wrappers.dart';
 
 part 'src/log.dart';
+part 'src/config.dart';
+

@@ -3,7 +3,6 @@ library bwu_log.test.logviewer;
 import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:mock/mock.dart' as mock;
-import 'package:matcher/matcher.dart';
 import 'package:bwu_log/components/logviewer_controller.dart';
 import 'package:test/test.dart';
 
