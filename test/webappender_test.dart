@@ -20,7 +20,7 @@ import 'dart:html';
 import 'package:logging/logging.dart';
 import 'package:bwu_log/web.dart';
 import 'package:test/test.dart';
-import 'package:bwu_log/log.dart';
+import 'package:bwu_log/bwu_log.dart';
 
 main() {
   WebAppender webAppender;

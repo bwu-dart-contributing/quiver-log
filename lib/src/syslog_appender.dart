@@ -4,6 +4,7 @@ import 'dart:io' as io;
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:bwu_log/bwu_log.dart' as log;
+import 'package:bwu_log/bwu_log_io.dart';
 import 'package:logging/logging.dart';
 import 'package:intl/intl.dart';
 import 'dart:async' show Future;
@@ -34,9 +35,11 @@ class SyslogAppenderConfig extends log.AppenderConfig {
   static const defaultFormatter = const SimpleSyslogFormatter();
 
   log.Formatter get formatter {
-    final formatter = _configuration['formatter'];
+    final formatter = formatters[_configuration['formatter']];
     return formatter != null ? formatter : defaultFormatter;
   }
+
+  static const defaultTransport = 'udp';
 
   SyslogUdpTransport get transport {
     final transportName = _configuration['transport'];
@@ -47,7 +50,7 @@ class SyslogAppenderConfig extends log.AppenderConfig {
         return factory(transportConfig);
       }
     }
-    return _syslogTransportFactories['udp'](_configuration['transport_config']);
+    return _syslogTransportFactories[defaultTransport](_configuration['transport_config']);
   }
 }
 

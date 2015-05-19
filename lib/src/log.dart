@@ -132,6 +132,7 @@ class InMemoryListAppender extends Appender<Object> {
   /**
    * Returns a new InMemoryListAppender with the given [Formatter<String>]
    */
+
   InMemoryListAppender(InMemoryListAppenderConfig config) : super(config);
 
   void append(LogRecord record, Formatter<Object> formatter) =>

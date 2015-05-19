@@ -21,7 +21,7 @@ import 'simple_logger.dart';
 main() {
   group('Appender', (){
      test('Appends handles log message and formats before output', (){
-       var appender = new InMemoryListAppender(new SimpleStringFormatter());
+       var appender = new InMemoryListAppender(new InMemoryListAppenderConfig());
        var logger = new SimpleLogger();
        appender.attachLogger(logger);
 

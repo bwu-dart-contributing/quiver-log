@@ -61,7 +61,7 @@ class IoConfig extends log.LogConfig {
 
   static final _ioAppenderFactories = {
     'Syslog':
-        (SyslogAppenderConfig config) => new SyslogAppender.fromConfig(config),
+        ([Map config]) => new SyslogAppender(new SyslogAppenderConfig(config)),
   };
 
   IoConfig._() : super.protected() {

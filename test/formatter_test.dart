@@ -16,7 +16,7 @@ library bwu_log.test.formatter;
 
 // import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
-import 'package:bwu_log/log.dart';
+import 'package:bwu_log/bwu_log.dart';
 import 'package:test/test.dart';
 
 main() {
@@ -27,8 +27,8 @@ main() {
        // var dateFormat = new DateFormat("MMyy HH:mm:ss.S"); // TODO check what this was intended for
        var formatRegexp =
            new RegExp(r'\d\d \d\d:\d\d:\d\d.\d\d\d INFO \d root+ formatted message!');
-       print(BASIC_LOG_FORMATTER.call(record));
-       expect(BASIC_LOG_FORMATTER.call(record), matches(formatRegexp));
+       print(const BasicLogFormatter().call(record));
+       expect(const BasicLogFormatter().call(record), matches(formatRegexp));
      });
   });
 }

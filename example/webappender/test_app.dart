@@ -1,11 +1,11 @@
-import 'package:bwu_log/log.dart';
+import 'package:bwu_log/bwu_log.dart';
 import 'package:bwu_log/web.dart';
 import 'package:logging/logging.dart';
 
 
 main() {
   Logger _logger = new Logger('testlogger');
-  Appender _logAppender = new WebAppender.webConsole(BASIC_LOG_FORMATTER);
+  Appender _logAppender = new WebAppender.webConsole(const BasicLogFormatter());
   Logger.root.level = Level.ALL;
   _logAppender.attachLogger(_logger);
 

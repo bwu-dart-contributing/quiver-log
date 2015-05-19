@@ -9,7 +9,8 @@ main() {
     test('should load from file', () {
       IoConfig conf = logConfig..loadConfig('test/config/bwu_log.yaml');
       expect(conf.appender, new isInstanceOf<SyslogAppender>());
-      expect(conf.appender.formatter,new isInstanceOf<SimpleSyslogFormatter>());
+      expect(new SyslogAppenderConfig(conf.appenderConfiguration).formatter,
+          new isInstanceOf<SimpleSyslogFormatter>());
     });
   });
 }
