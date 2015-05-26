@@ -37,15 +37,16 @@ class WebAppender extends Appender<Object> {
    * Constructor that creates appender which formats the messages using the
    * [Formatter] and outputs to the supplied [Console].
    */
-  factory WebAppender.usingConsole(Formatter<String> formatter, Console console)
-    => new WebAppender(formatter, console);
+  factory WebAppender.usingConsole(
+          Formatter<String> formatter, Console console) =>
+      new WebAppender(formatter, console);
 
   /**
    * Constructor that creates appender which formats the messages using the
    * [Formatter] and outputs to Window.console
    */
   factory WebAppender.webConsole(Formatter<String> formatter) =>
-    new WebAppender(formatter, window.console);
+      new WebAppender(formatter, window.console);
 
   @override
   void append(LogRecord record, Formatter<String> formatter) {

@@ -2,7 +2,6 @@ import 'package:bwu_log/bwu_log.dart';
 import 'package:bwu_log/web.dart';
 import 'package:logging/logging.dart';
 
-
 main() {
   Logger _logger = new Logger('testlogger');
   Appender _logAppender = new WebAppender.webConsole(const BasicLogFormatter());
@@ -17,5 +16,4 @@ main() {
   _logger.warning('warning message');
   _logger.severe('severe message');
   _logger.shout('severe message');
-
 }

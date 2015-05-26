@@ -21,4 +21,3 @@ import 'package:collection/wrappers.dart';
 
 part 'src/log.dart';
 part 'src/config.dart';
-

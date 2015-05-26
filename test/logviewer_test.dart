@@ -83,13 +83,15 @@ main() {
       });
 
       test('partial message match', () {
-        var logRecord = makeLogRecord(message: 'Vocaloid Live with Kagamine Rin');
+        var logRecord =
+            makeLogRecord(message: 'Vocaloid Live with Kagamine Rin');
         var regexFilter = Filter.parseAll('"Kagamine Rin"')[0];
         expect(regexFilter.match(logRecord), isTrue);
       });
 
       test('single word, no quotes', () {
-        var logRecord = makeLogRecord(message: 'Vocaloid Live with Kagamine Rin');
+        var logRecord =
+            makeLogRecord(message: 'Vocaloid Live with Kagamine Rin');
         var regexFilter = Filter.parseAll('Kagamine')[0];
         expect(regexFilter.match(logRecord), isTrue);
       });
@@ -230,10 +232,11 @@ main() {
       var messages = [];
       mockView.when(mock.callsTo('get logName')).alwaysReturn(logName);
       mockView.when(mock.callsTo('get messages')).alwaysReturn(messages);
-      mockView.when(mock.callsTo('consistentScrollingDuringMutation', anything))
+      mockView
+          .when(mock.callsTo('consistentScrollingDuringMutation', anything))
           .alwaysCall((x) => x());
 
-      // var controller = new LogViewerController(mockView); // TODO check what this was intended for
+      var controller = new LogViewerController(mockView);
       // Now send a few log messages...
       var logger = new Logger(logName);
       logger.info('Tracer Tong is here');
@@ -249,7 +252,8 @@ main() {
       var messages = [];
       mockView.when(mock.callsTo('get logName')).alwaysReturn(logName);
       mockView.when(mock.callsTo('get messages')).alwaysReturn(messages);
-      mockView.when(mock.callsTo('consistentScrollingDuringMutation', anything))
+      mockView
+          .when(mock.callsTo('consistentScrollingDuringMutation', anything))
           .alwaysCall((x) => x());
 
       var controller = new LogViewerController(mockView);
@@ -277,7 +281,8 @@ main() {
       controller.addFilter('/baz/');
       var oldFilters = controller.filters.toList();
       controller.killFilter(oldFilters[1].id);
-      mockView.getLogs(mock.callsTo('showFilters', [oldFilters[0], oldFilters[2]]))
+      mockView
+          .getLogs(mock.callsTo('showFilters', [oldFilters[0], oldFilters[2]]))
           .verify(mock.happenedAtLeast(1));
     });
 
@@ -287,7 +292,8 @@ main() {
       var messages = [];
       mockView.when(mock.callsTo('get logName')).alwaysReturn(logName);
       mockView.when(mock.callsTo('get messages')).alwaysReturn(messages);
-      mockView.when(mock.callsTo('consistentScrollingDuringMutation', anything))
+      mockView
+          .when(mock.callsTo('consistentScrollingDuringMutation', anything))
           .alwaysCall((x) => x());
 
       var controller = new LogViewerController(mockView);
@@ -312,6 +318,7 @@ main() {
   });
 }
 
-LogRecord makeLogRecord({String message: 'message', Level level: Level.FINE, String logger: 'logger'}) {
+LogRecord makeLogRecord({String message: 'message', Level level: Level.FINE,
+    String logger: 'logger'}) {
   return new LogRecord(level, message, logger);
 }

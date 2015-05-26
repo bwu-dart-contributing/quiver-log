@@ -16,12 +16,13 @@ class TestApp extends PolymerElement {
       timerLogger.info("heartbeat: ${count++}");
     });
   }
-  
+
   void logClick(event, _, sender) {
     if (inputLogger == null) {
       return;
     }
-    TextInputElement input = shadowRoot.children.firstWhere((x) => x.id == "textfield", orElse: null);
+    TextInputElement input = shadowRoot.children.firstWhere(
+        (x) => x.id == "textfield", orElse: null);
     if (input == null) {
       inputLogger.info("no logger found");
     }

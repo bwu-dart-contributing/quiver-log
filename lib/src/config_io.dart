@@ -7,28 +7,33 @@ import 'package:yaml/yaml.dart';
 import 'package:bwu_log/src/syslog_appender.dart';
 import 'package:collection/wrappers.dart';
 
-final Map<String, log.Formatter> _formatters = <String, log.Formatter>{
-  'Default': const SimpleSyslogFormatter(),
-  'Simple': const SimpleSyslogFormatter(),
+final Map<String, log.FormatterFactory> _formatterFactories =
+    <String, log.FormatterFactory>{
+  'Default': ([SimpleSyslogFormatterConfig config]) =>
+      new SimpleSyslogFormatter(config),
+  'Simple': ([SimpleSyslogFormatterConfig config]) =>
+      new SimpleSyslogFormatter(config),
 }..addAll(log.formatters);
 
 Map<String, log.Formatter> get formatters =>
-    new UnmodifiableMapView(_formatters);
+    new UnmodifiableMapView(_formatterFactories);
 
-void registerFormatter(String name, log.Formatter factory, {override: false}) {
-  final bool exists = _formatters[name] != null;
+void registerFormatter(String name, log.FormatterFactory factory,
+    {override: false}) {
+  final bool exists = _formatterFactories[name] != null;
   if (exists && !override) {
     throw 'Formatter "${name}" is already registers. You can use "override: true" to force override.';
   }
-  _formatters[name] = factory;
+  _formatterFactories[name] = factory;
 }
 
-log.Formatter removeFormatter(String name) => _formatters.remove(name);
+log.FormatterFactory removeFormatter(String name) =>
+    _formatterFactories.remove(name);
 
 final Map<String, log.AppenderFactory> _appenderFactories =
     <String, log.AppenderFactory>{
-  'Default': ([Map config]) => new SyslogAppender(new SyslogAppenderConfig(config)),
-  'Syslog': ([Map config]) => new SyslogAppender(new SyslogAppenderConfig(config)),
+  'Syslog':
+      ([Map config]) => new SyslogAppender(new SyslogAppenderConfig(config)),
 }..addAll(log.appenderFactories);
 
 Map<String, log.AppenderFactory> get appenderFactories =>
@@ -55,7 +60,7 @@ IoConfig get logConfig {
 }
 
 class IoConfig extends log.LogConfig {
-  static const _ioFormatters = const {
+  static final _ioFormatters = {
     'SimpleSyslog': SyslogAppenderConfig.defaultFormatter
   };
 

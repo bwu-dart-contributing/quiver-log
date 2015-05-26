@@ -20,15 +20,15 @@ import 'package:bwu_log/bwu_log.dart';
 import 'package:test/test.dart';
 
 main() {
-  group('BasicLogFormatter', (){
-     test('correctly formats LogRecord', (){
-       LogRecord record =
-           new LogRecord(Level.INFO, 'formatted message!', 'root');
-       // var dateFormat = new DateFormat("MMyy HH:mm:ss.S"); // TODO check what this was intended for
-       var formatRegexp =
-           new RegExp(r'\d\d \d\d:\d\d:\d\d.\d\d\d INFO \d root+ formatted message!');
-       print(const BasicLogFormatter().call(record));
-       expect(const BasicLogFormatter().call(record), matches(formatRegexp));
-     });
+  group('BasicLogFormatter', () {
+    test('correctly formats LogRecord', () {
+      LogRecord record =
+          new LogRecord(Level.INFO, 'formatted message!', 'root');
+      // var dateFormat = new DateFormat("MMyy HH:mm:ss.S"); // TODO check what this was intended for
+      var formatRegexp = new RegExp(
+          r'\d\d \d\d:\d\d:\d\d.\d\d\d INFO \d root+ formatted message!');
+      print(const BasicLogFormatter().call(record));
+      expect(const BasicLogFormatter().call(record), matches(formatRegexp));
+    });
   });
 }

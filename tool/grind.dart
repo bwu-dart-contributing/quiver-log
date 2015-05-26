@@ -40,4 +40,3 @@ _lint() => new PubApp.global('linter')
 // TODO(zoechi) enable firefox when the issue with timed-out connection is fixed
 _test() => new PubApp.local('test')
     .run(['-pvm', '-pdartium', '-pchrome', /*'-pfirefox'*/]);
-

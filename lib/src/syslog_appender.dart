@@ -8,22 +8,36 @@ import 'package:bwu_log/bwu_log_io.dart';
 import 'package:logging/logging.dart';
 import 'package:intl/intl.dart';
 import 'dart:async' show Future;
+import 'package:collection/wrappers.dart';
 
 // const simpleSyslogFormatter = const SimpleSyslogFormatter();
 
-typedef SyslogTransport SyslogTransportFactory(Map config);
+typedef SyslogTransport SyslogTransportFactory([Map config]);
 
 final Map<String, SyslogTransportFactory> _syslogTransportFactories =
     <String, SyslogTransportFactory>{
-  'udp': (Map config) =>
+  'udp': ([Map config]) =>
       new SyslogUdpTransport(new SyslogUdpTransportConfig(config))
 };
 
+Map<String, SyslogTransportFactory> get syslogTransportFactories =>
+    new UnmodifiableMapView(_syslogTransportFactories);
+
+void registerSyslogTransportFactory(String name, SyslogTransportFactory factory,
+    {override: false}) {
+  final bool exists = _syslogTransportFactories[name] != null;
+  if (exists && !override) {
+    throw 'SyslogTransportFactory "${name}" is already registered. You can use "override: true" to force override.';
+  }
+  _syslogTransportFactories[name] = factory;
+}
+
+SyslogTransportFactory removeSyslogTransportFactory(String name) =>
+    _syslogTransportFactories.remove(name);
+
 class SyslogAppenderConfig extends log.AppenderConfig {
-  static get defaultConfig => {
-    'formatter': defaultFormatter,
-    'transport': 'udp',
-  };
+  static get defaultConfig =>
+      {'formatter': defaultFormatter, 'transport': 'udp',};
 
   final Map _configuration;
 
@@ -32,7 +46,8 @@ class SyslogAppenderConfig extends log.AppenderConfig {
     assert(_configuration != null);
   }
 
-  static const defaultFormatter = const SimpleSyslogFormatter();
+  static final defaultFormatter =
+      new SimpleSyslogFormatter(new SimpleSyslogFormatterConfig());
 
   log.Formatter get formatter {
     final formatter = formatters[_configuration['formatter']];
@@ -41,7 +56,7 @@ class SyslogAppenderConfig extends log.AppenderConfig {
 
   static const defaultTransport = 'udp';
 
-  SyslogUdpTransport get transport {
+  SyslogTransport get transport {
     final transportName = _configuration['transport'];
     final transportConfig = _configuration['transport_config'];
     if (transportName != null) {
@@ -50,7 +65,8 @@ class SyslogAppenderConfig extends log.AppenderConfig {
         return factory(transportConfig);
       }
     }
-    return _syslogTransportFactories[defaultTransport](_configuration['transport_config']);
+    return _syslogTransportFactories[defaultTransport](
+        _configuration['transport_config']);
   }
 }
 
@@ -78,8 +94,9 @@ class SyslogUdpTransport implements SyslogTransport {
   Future open() async {
     try {
       _host = await _config.host;
-      _socket = await io.RawDatagramSocket.bind(await io.InternetAddress.ANY_IP_V4, 0);
-    } catch(e) {
+      _socket = await io.RawDatagramSocket.bind(
+          await io.InternetAddress.ANY_IP_V4, 0);
+    } catch (e) {
       // Prevent logging from crashing the app
       // TODO(zoechi) find some way to handle this properly
     }
@@ -92,7 +109,7 @@ class SyslogUdpTransport implements SyslogTransport {
   }
 
   int send(List<int> data) {
-    if(isOpen) {
+    if (isOpen) {
       return _socket.send(data, _host, _config.port);
     }
     return 0;
@@ -109,8 +126,8 @@ class SyslogUdpTransportConfig {
 
   Map _configuration;
   SyslogUdpTransportConfig([this._configuration]) {
-    if(_configuration == null) {
-      _configuration =  defaultConfig;
+    if (_configuration == null) {
+      _configuration = defaultConfig;
     }
   }
 
@@ -207,34 +224,14 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
     if (msg.message.isNotEmpty) {
       io.BytesBuilder header = new io.BytesBuilder();
 
-      // pri
-      header.add('<'.codeUnits);
-      header.add(((msg.facility.index << 3) + msg.severity.index)
-          .toString().codeUnits);
-      header.add('>'.codeUnits);
-
-      // header
-      //  timestamp
-      String ts = _dateFormat.format(msg.timeStamp);
-      if (ts[4] == '0') {
-        ts = ts.replaceRange(4, 5, ' ');
-      }
-      header.add(ts.codeUnits);
-      header.add(' '.codeUnits);
-
-      //  hostname
-      if (msg.hostname != null) {
-        header.add(msg.hostname.split('.').first.codeUnits);
-      }
-      header.add(' '.codeUnits);
+      _addHeader(header, msg);
 
       if (msg.tag != null) {
         header.add(msg.tag.substring(0, math.min(
-            31 - msg.sequenceNumber.toString().length,
-            msg.tag.length)).codeUnits);
+            31 - msg.messageId.toString().length, msg.tag.length)).codeUnits);
       }
       header.add('-'.codeUnits);
-      header.add(msg.sequenceNumber.toString().codeUnits);
+      header.add(msg.messageId.toString().codeUnits);
       header.add(':'.codeUnits);
 
       int pos = 0;
@@ -254,6 +251,52 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
       }
     }
   }
+
+  final _space = ' '.codeUnits;
+  void _addHeader(io.BytesBuilder header, SyslogMessage msg) {
+    _addPri(header, msg.facility, msg.severity);
+    _addVersion(header);
+    header.add(_space);
+    _addTimeStamp(header, msg.timeStamp);
+    header.add(_space);
+    _addHostname(header, msg.hostname);
+    header.add(_space);
+    _addAppName(header, msg.appName);
+    header.add(_space);
+  }
+
+  void _addPri(io.BytesBuilder header, Facility facility, Severity severity) {
+    header.add('<'.codeUnits);
+    header.add(((facility.index << 3) + severity.index).toString().codeUnits);
+    header.add('>'.codeUnits);
+  }
+
+  void _addTimeStamp(io.BytesBuilder header, DateTime timeStamp) {
+    // RFC 5424
+    header.add(timeStamp.toUtc().toIso8601String().codeUnits);
+
+    // RFC 3164
+//    String ts = _dateFormat.format(timeStamp);
+//    if (ts[4] == '0') {
+//      ts = ts.replaceRange(4, 5, ' ');
+//    }
+//    header.add(ts.codeUnits);
+//    header.add(' '.codeUnits);
+  }
+
+  void _addVersion(io.BytesBuilder header) {
+    header.add('1'.codeUnits);
+  }
+
+  void _addHostname(io.BytesBuilder header, String hostname) {
+    /// if FQN is provided extract the hostname
+    if (hostname != null) {
+      header.add(hostname.split('.').first.codeUnits);
+    }
+    header.add(' '.codeUnits);
+  }
+
+  void _addAppName(io.BytesBuilder header, String appName) {}
 
   Future<Null> _send(List<int> bytes) async {
     if (!_transport.isOpen) {
@@ -327,6 +370,7 @@ enum Facility {
 }
 
 class SyslogMessage {
+  // RFC 3164
   // 0 - Emergency: system is unusable
   final Severity severity;
   // 1 - Alert: action must be taken immediately
@@ -338,19 +382,28 @@ class SyslogMessage {
   // 4 - Warning: warning conditions
   final String tag;
   // 5 - Notice: normal but significant condition
-  final int sequenceNumber;
+  //final int sequenceNumber;
+  // renamed by RFC 5424
+  final int messageId;
   // 6 - Informational: informational messages
   final String message;
 
+  // added by RFC 5424
+  final String appName;
+  final String processId;
+
   const SyslogMessage(this.severity, this.facility, this.timeStamp,
-      this.hostname, this.tag, this.sequenceNumber, this.message);
+      this.hostname, this.tag, this.messageId, this.message,
+      [this.appName, this.processId]);
 }
 
 const int maxMessageLength = 1024;
 const String splitter = '\n>>>\n';
 
 class SimpleSyslogFormatter extends log.FormatterBase<SyslogMessage> {
-  const SimpleSyslogFormatter() : super();
+  final SimpleSyslogFormatterConfig _configuration;
+
+  SimpleSyslogFormatter(this._configuration) : super();
 
   SyslogMessage call(LogRecord record) {
     Severity severity;
@@ -385,6 +438,20 @@ class SimpleSyslogFormatter extends log.FormatterBase<SyslogMessage> {
     String tag = record.loggerName;
 
     return new SyslogMessage(severity, Facility.user, record.time,
-        io.Platform.localHostname, tag, record.sequenceNumber, message);
+        io.Platform.localHostname, tag, record.sequenceNumber, message, null,
+        record.zone['LOGGING_ZONE_NAME']);
+  }
+}
+
+class SimpleSyslogFormatterConfig implements log.FormatterConfig {
+  static const Map defaultConfig = const {'app_name': ''};
+  Map _configuration;
+
+  String get appName => _configuration['app_name'];
+
+  SimpleSyslogFormatterConfig([this._configuration]) {
+    if (_configuration == null) {
+      _configuration = defaultConfig;
+    }
   }
 }

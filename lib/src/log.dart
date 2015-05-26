@@ -58,7 +58,7 @@ typedef T Formatter<T>(LogRecord record);
  * Formatter accepts a [LogRecord] and returns a T
  */
 abstract class FormatterBase<T> {
-  //TODO(bendera): wasnt sure if formatter should be const, but it seems like
+  //TODO(bendera): wasn't sure if formatter should be const, but it seems like
   //if we intend for them to eventually be only functions then it make sense.
   const FormatterBase();
 
@@ -98,7 +98,7 @@ class PrintAppender extends Appender<String> {
    * Returns a new ConsoleAppender with the given [Formatter<String>]
    */
   factory PrintAppender([PrintAppenderConfig config]) {
-    if(config == null) config = new PrintAppenderConfig();
+    if (config == null) config = new PrintAppenderConfig();
     return new PrintAppender._(config);
   }
 

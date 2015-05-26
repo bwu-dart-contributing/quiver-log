@@ -1,29 +1,36 @@
 part of bwu_log;
 
 typedef Appender AppenderFactory([Map config]);
+typedef FormatterBase FormatterFactory([FormatterConfig config]);
 
-final Map<String, Formatter> _formatters = <String, Formatter>{
-  'Default': const BasicLogFormatter(),
-  'Basic': const BasicLogFormatter(),
+final Map<String, FormatterFactory> _formatterFactories =
+    <String, FormatterFactory>{
+  'Default': ([config]) => const BasicLogFormatter(),
+  'Basic': ([config]) => const BasicLogFormatter(),
 };
 
-Map<String, Formatter> get formatters => new UnmodifiableMapView(_formatters);
+Map<String, FormatterFactory> get formatters =>
+    new UnmodifiableMapView<String, FormatterFactory>(_formatterFactories);
 
-void registerFormatter(String name, Formatter factory, {override: false}) {
-  final bool exists = _formatters[name] != null;
+void registerFormatter(String name, FormatterFactory factory,
+    {override: false}) {
+  final bool exists = _formatterFactories[name] != null;
   if (exists && !override) {
-    throw 'Formatter "${name}" is already registers. You can use "override: true" to force override.';
+    throw 'Formatter "${name}" is already registered. You can use "override: true" to force override.';
   }
-  _formatters[name] = factory;
+  _formatterFactories[name] = factory;
 }
 
-Formatter removeFormatter(String name) => _formatters.remove(name);
+FormatterFactory removeFormatter(String name) =>
+    _formatterFactories.remove(name);
 
 final Map<String, AppenderFactory> _appenderFactories =
     <String, AppenderFactory>{
-  'Default': ([Map config]) => new PrintAppender(new PrintAppenderConfig(config)),
+  'Default':
+      ([Map config]) => new PrintAppender(new PrintAppenderConfig(config)),
   'Print': ([Map config]) => new PrintAppender(new PrintAppenderConfig(config)),
-  'InMemoryList': ([Map config]) => new PrintAppender(new PrintAppenderConfig(config)),
+  'InMemoryList':
+      ([Map config]) => new PrintAppender(new PrintAppenderConfig(config)),
 };
 
 Map<String, AppenderFactory> get appenderFactories =>
@@ -33,7 +40,7 @@ void registerAppenderFactory(String name, AppenderFactory factory,
     {override: false}) {
   final bool exists = _appenderFactories[name] != null;
   if (exists && !override) {
-    throw 'Formatter "${name}" is already registers. You can use "override: true" to force override.';
+    throw 'Formatter "${name}" is already registered. You can use "override: true" to force override.';
   }
   _appenderFactories[name] = factory;
 }
@@ -55,7 +62,7 @@ abstract class Config {
   String get activeConfigName;
 }
 
-/// Helper to process the logger configuration.
+/// Entry point for processing the logger configuration.
 class LogConfig {
   final Map config = {};
   String _activeConfigName = 'default';
@@ -98,10 +105,10 @@ class LogConfig {
 
   Appender get appender =>
       appenderFactories[activeConfiguration['appender']](appenderConfiguration);
-
-
 }
 
 abstract class AppenderConfig {
   Formatter formatter;
 }
+
+abstract class FormatterConfig {}

@@ -7,7 +7,7 @@ import 'package:logging/logging.dart';
 import 'logviewer_controller.dart';
 
 @CustomTag('log-viewer')
-class LogViewer extends PolymerElement  {
+class LogViewer extends PolymerElement {
   @published int windowWidth = 500;
   @published int windowHeight = 350;
   @observable List<LogRecord> messages = toObservable(new List<LogRecord>());

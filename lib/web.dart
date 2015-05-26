@@ -13,6 +13,7 @@
 // limitations under the License.
 
 library bwu_log.web;
+
 import 'dart:html';
 import 'package:bwu_log/bwu_log.dart';
 import 'package:logging/logging.dart';

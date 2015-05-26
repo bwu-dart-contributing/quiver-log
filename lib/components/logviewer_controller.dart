@@ -110,7 +110,7 @@ class Filter {
           }
           i++;
         } else if (str[i] == delimiter) {
-          i++;  // to advance past the quoted regex
+          i++; // to advance past the quoted regex
           break;
         } else {
           escaped += str[i];
@@ -172,7 +172,8 @@ class Filter {
       if (hierarchicalLoggingEnabled) {
         // Hierarchical logging has dot-separated hierarchies.
         // So logger ui.calendar.event-highlighter inherits from ui.calendar and ui.
-        if (_loggerName != record.loggerName && !(record.loggerName.startsWith(_loggerName + "."))) {
+        if (_loggerName != record.loggerName &&
+            !(record.loggerName.startsWith(_loggerName + "."))) {
           matches = false;
         }
       } else {
@@ -290,7 +291,9 @@ class LogViewerController {
 
     // TODO: stay scrolled to roughly the same place.
     view.messages.clear();
-    view.messages.addAll(_logs.where((record) => !filters.any((filter) => !filter.match(record))));
+    view.messages
+        .addAll(_logs.where(
+            (record) => !filters.any((filter) => !filter.match(record))));
   }
 
   void addFilter(var filter) {

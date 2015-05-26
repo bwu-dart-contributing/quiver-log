@@ -19,16 +19,16 @@ import 'package:test/test.dart';
 import 'simple_logger.dart';
 
 main() {
-  group('Appender', (){
-     test('Appends handles log message and formats before output', (){
-       var appender = new InMemoryListAppender(new InMemoryListAppenderConfig());
-       var logger = new SimpleLogger();
-       appender.attachLogger(logger);
+  group('Appender', () {
+    test('Appends handles log message and formats before output', () {
+      var appender = new InMemoryListAppender(new InMemoryListAppenderConfig());
+      var logger = new SimpleLogger();
+      appender.attachLogger(logger);
 
-       logger.info('test message');
+      const message = 'test message';
+      logger.info('test message');
 
-       expect(appender.messages.last, 'Formatted test message');
-     });
+      expect(appender.messages.last.toString().endsWith(message), isTrue);
+    });
   });
 }
-

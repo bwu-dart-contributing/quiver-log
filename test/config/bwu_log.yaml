@@ -11,6 +11,8 @@ configurations:
         max_message_length: 2048 # min 480, default 2048
         transgression_action: split # or truncate
       formatter: SimpleSyslog
+      formatter_config:
+        appname: 'bwu_log-test'
     filter:
 
   print:
