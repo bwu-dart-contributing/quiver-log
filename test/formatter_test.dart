@@ -27,8 +27,8 @@ main() {
       // var dateFormat = new DateFormat("MMyy HH:mm:ss.S"); // TODO check what this was intended for
       var formatRegexp = new RegExp(
           r'\d\d \d\d:\d\d:\d\d.\d\d\d INFO \d root+ formatted message!');
-      print(const BasicLogFormatter().call(record));
-      expect(const BasicLogFormatter().call(record), matches(formatRegexp));
+      print(BASIC_LOG_FORMATTER.call(record));
+      expect(BASIC_LOG_FORMATTER.call(record), matches(formatRegexp));
     });
   });
 }

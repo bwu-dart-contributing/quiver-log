@@ -237,6 +237,7 @@ main() {
           .alwaysCall((x) => x());
 
       var controller = new LogViewerController(mockView);
+      controller = controller; // silence analyzer
       // Now send a few log messages...
       var logger = new Logger(logName);
       logger.info('Tracer Tong is here');

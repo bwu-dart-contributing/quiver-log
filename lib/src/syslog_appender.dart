@@ -10,66 +10,6 @@ import 'package:intl/intl.dart';
 import 'dart:async' show Future;
 import 'package:collection/wrappers.dart';
 
-// const simpleSyslogFormatter = const SimpleSyslogFormatter();
-
-typedef SyslogTransport SyslogTransportFactory([Map config]);
-
-final Map<String, SyslogTransportFactory> _syslogTransportFactories =
-    <String, SyslogTransportFactory>{
-  'udp': ([Map config]) =>
-      new SyslogUdpTransport(new SyslogUdpTransportConfig(config))
-};
-
-Map<String, SyslogTransportFactory> get syslogTransportFactories =>
-    new UnmodifiableMapView(_syslogTransportFactories);
-
-void registerSyslogTransportFactory(String name, SyslogTransportFactory factory,
-    {override: false}) {
-  final bool exists = _syslogTransportFactories[name] != null;
-  if (exists && !override) {
-    throw 'SyslogTransportFactory "${name}" is already registered. You can use "override: true" to force override.';
-  }
-  _syslogTransportFactories[name] = factory;
-}
-
-SyslogTransportFactory removeSyslogTransportFactory(String name) =>
-    _syslogTransportFactories.remove(name);
-
-class SyslogAppenderConfig extends log.AppenderConfig {
-  static get defaultConfig =>
-      {'formatter': defaultFormatter, 'transport': 'udp',};
-
-  final Map _configuration;
-
-  SyslogAppenderConfig([Map configuration])
-      : _configuration = configuration != null ? configuration : defaultConfig {
-    assert(_configuration != null);
-  }
-
-  static final defaultFormatter =
-      new SimpleSyslogFormatter(new SimpleSyslogFormatterConfig());
-
-  log.Formatter get formatter {
-    final formatter = formatters[_configuration['formatter']];
-    return formatter != null ? formatter : defaultFormatter;
-  }
-
-  static const defaultTransport = 'udp';
-
-  SyslogTransport get transport {
-    final transportName = _configuration['transport'];
-    final transportConfig = _configuration['transport_config'];
-    if (transportName != null) {
-      final factory = _syslogTransportFactories[transportName];
-      if (factory != null) {
-        return factory(transportConfig);
-      }
-    }
-    return _syslogTransportFactories[defaultTransport](
-        _configuration['transport_config']);
-  }
-}
-
 enum TransgressionAction { split, truncate, }
 
 enum Protocol { tcp, udp, }
@@ -83,17 +23,44 @@ abstract class SyslogTransport {
 
 class SyslogUdpTransport implements SyslogTransport {
   bool get isOpen => _socket != null;
-  SyslogUdpTransportConfig _config;
   io.RawDatagramSocket _socket;
-  io.InternetAddress _host;
+  final host;
+  final int port;
+  final int maxMessageLength;
+  final int transgressionAction;
 
-  SyslogUdpTransport([this._config]) {
-    if (_config == null) _config = new SyslogUdpTransportConfig();
+  io.InternetAddress _resolvedHost;
+
+  static Future<io.InternetAddress> _getHost(host) async {
+    if (host is io.InternetAddress) {
+      return host;
+    }
+    if (host != null) {
+      try {
+        return new io.InternetAddress(host);
+      } catch (_) {}
+      try {
+        return (await io.InternetAddress.lookup(host)).first;
+      } catch (_) {}
+    }
+    return null;
   }
+
+  SyslogUdpTransport({this.host, this.port: 514, this.maxMessageLength: 2048,
+      this.transgressionAction: TransgressionAction.split})
+      : host = host != null ? host : io.InternetAddress.LOOPBACK_IP_V4,
+        port = port != null ? port : 514,
+        maxMessageLength = maxMessageLength != null ? maxMessageLength : 2048,
+        transgressionAction = transgressionAction != null
+            ? transgressionAction
+            : TransgressionAction.split;
 
   Future open() async {
     try {
-      _host = await _config.host;
+      _resolvedHost = await _getHost(this.host);
+      if (_resolvedHost == null) {
+        return;
+      }
       _socket = await io.RawDatagramSocket.bind(
           await io.InternetAddress.ANY_IP_V4, 0);
     } catch (e) {
@@ -110,112 +77,20 @@ class SyslogUdpTransport implements SyslogTransport {
 
   int send(List<int> data) {
     if (isOpen) {
-      return _socket.send(data, _host, _config.port);
+      return _socket.send(data, _resolvedHost, port);
     }
     return 0;
   }
 }
 
-class SyslogUdpTransportConfig {
-  static const Map defaultConfig = const {
-    'host': 'localhost',
-    'port': 514,
-    'max_message_length': 2048,
-    'transgression_action': 'split',
-  };
-
-  Map _configuration;
-  SyslogUdpTransportConfig([this._configuration]) {
-    if (_configuration == null) {
-      _configuration = defaultConfig;
-    }
-  }
-
-  static const defaultMaxMessageLength = 2048;
-
-  int get maxMessageLength {
-    final max = _configuration['max_message_length'];
-    try {
-      return max != null ? int.parse(max) : defaultMaxMessageLength;
-    } catch (_) {
-      print('SyslogAppenderConfig: Unsupported max_message_length "${max}".');
-    }
-  }
-
-  static const defaultTransgressionAction = TransgressionAction.split;
-
-  TransgressionAction get transgressionAction {
-    final String action = _configuration['transgression_action'];
-    if (action == null) {
-      return defaultTransgressionAction;
-    }
-    switch (action) {
-      case 'split':
-        return TransgressionAction.split;
-      case 'truncate':
-        return TransgressionAction.truncate;
-      default:
-        print(
-            'SyslogAppenderConfig: Unsupported transgression_action "${action}".');
-        return defaultTransgressionAction;
-    }
-  }
-
-  static const defaultProtocol = Protocol.tcp;
-
-//  Protocol get protocol {
-//    final String proto = _configuration['protocol'];
-//    if (proto == null) {
-//      return defaultProtocol;
-//    }
-//    switch (proto) {
-//      case 'tcp':
-//        return Protocol.tcp;
-//      case 'udp':
-//        return Protocol.udp;
-//      default:
-//        print('SyslogAppenderConfig: Unsupported protocol "${proto}".');
-//        return defaultProtocol;
-//    }
-//  }
-
-  // TODO(zoechi) find out why it doesn't work with io.InternetAddress.LOOPBACK_IP_V6
-  static final defaultHost = io.InternetAddress.LOOPBACK_IP_V4;
-
-  Future<io.InternetAddress> get host async {
-    final String host = _configuration['_host'];
-    if (host != null) {
-      try {
-        return new io.InternetAddress(host);
-      } catch (_) {}
-      try {
-        return (await io.InternetAddress.lookup(host)).first;
-      } catch (_) {}
-    }
-    return defaultHost;
-  }
-
-  static const defaultPort = 514;
-
-  int get port {
-    final p = _configuration['port'];
-    if (p == null) {
-      return defaultPort;
-    } else if (p is! int) {
-      print('SyslogAppenderConfig: Port "${p}" is not a valid integer value');
-    }
-
-    return p;
-  }
-}
-
 class SyslogAppender extends log.Appender<SyslogMessage> {
-  SyslogTransport _transport;
-  SyslogAppenderConfig get configuration => super.configuration;
+  SyslogFormatter get formatter => super.formatter;
+  final SyslogTransport transport;
 
-  SyslogAppender(SyslogAppenderConfig config) : super(config) {
-    _transport = config.transport;
-  }
+  SyslogAppender({SyslogFormatter formatter, this.transport, log.Filter filter})
+      : formatter = formatter != null ? formatter : new SimpleSyslogFormatter(),
+        transport = transport != null ? transport : new SyslogUdpTransport(),
+        super(formatter, filter: filter);
 
   static final DateFormat _dateFormat = new DateFormat("MMM dd hh:mm:ss");
 
@@ -299,11 +174,11 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
   void _addAppName(io.BytesBuilder header, String appName) {}
 
   Future<Null> _send(List<int> bytes) async {
-    if (!_transport.isOpen) {
-      await _transport.open();
+    if (!transport.isOpen) {
+      await transport.open();
     }
     // print(new String.fromCharCodes(bytes));
-    _transport.send(bytes);
+    transport.send(bytes);
   }
 }
 
@@ -400,11 +275,9 @@ class SyslogMessage {
 const int maxMessageLength = 1024;
 const String splitter = '\n>>>\n';
 
-class SimpleSyslogFormatter extends log.FormatterBase<SyslogMessage> {
-  final SimpleSyslogFormatterConfig _configuration;
+abstract class SyslogFormatter extends log.FormatterBase<SyslogMessage> {}
 
-  SimpleSyslogFormatter(this._configuration) : super();
-
+class SimpleSyslogFormatter extends SyslogFormatter {
   SyslogMessage call(LogRecord record) {
     Severity severity;
     if (record.level.value >= 1600) {
@@ -440,18 +313,5 @@ class SimpleSyslogFormatter extends log.FormatterBase<SyslogMessage> {
     return new SyslogMessage(severity, Facility.user, record.time,
         io.Platform.localHostname, tag, record.sequenceNumber, message, null,
         record.zone['LOGGING_ZONE_NAME']);
-  }
-}
-
-class SimpleSyslogFormatterConfig implements log.FormatterConfig {
-  static const Map defaultConfig = const {'app_name': ''};
-  Map _configuration;
-
-  String get appName => _configuration['app_name'];
-
-  SimpleSyslogFormatterConfig([this._configuration]) {
-    if (_configuration == null) {
-      _configuration = defaultConfig;
-    }
   }
 }

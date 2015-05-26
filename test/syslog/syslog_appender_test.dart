@@ -1,14 +1,14 @@
 library bwu_log.test.syslog_appender;
 
 import 'package:test/test.dart';
-import 'package:bwu_log/bwu_log_io.dart';
+import 'package:bwu_log/server_appenders.dart';
 import '../simple_logger.dart';
 import 'package:logging/logging.dart';
 
 main() {
   group('syslog_appender', () {
     test('should not fail', () {
-      var appender = appenderFactories['Syslog']();
+      var appender = new SyslogAppender();
       var logger = new SimpleLogger();
       appender.attachLogger(logger);
 
@@ -22,21 +22,11 @@ main() {
     SyslogTestFormatter formatter;
     Logger logger;
     setUp(() {
-      formatter = new SyslogTestFormatter();
-      registerFormatter('test', ([_]) => formatter);
-
-      transport = new SyslogTestTransport();
-      registerSyslogTransportFactory('test', ([Map config]) => transport);
-
-      appender = appenderFactories['Syslog'](
-          {'transport': 'test', 'formatter': 'test'});
       logger = new SimpleLogger();
       appender.attachLogger(logger);
     });
 
     tearDown(() {
-      removeSyslogTransportFactory('test');
-      removeFormatter('test');
     });
 
     test('should create PRI "<0>"', () {
@@ -182,8 +172,8 @@ class SyslogTestTransport extends SyslogTransport {
   }
 }
 
-class SyslogTestFormatter extends SimpleSyslogFormatter {
-  SyslogTestFormatter([_]) : super(_);
+class SyslogTestFormatter extends SyslogFormatter {
+  SyslogTestFormatter() : super();
 
   List<SyslogMessage> _messages;
   set messages(List<SyslogMessage> value) {
