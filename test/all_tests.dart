@@ -12,15 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-library quiver.log.all_tests;
+library bwu_log.all_tests;
 
 import 'appender_test.dart' as appender;
 import 'formatter_test.dart' as formatter;
-import 'logviewer_test.dart' as logviewer;
 
-main() {
+void main() {
   appender.main();
   formatter.main();
-  logviewer.main();
 }
-

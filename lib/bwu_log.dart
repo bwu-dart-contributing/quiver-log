@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-library quiver.log;
-import 'dart:async';
-import 'package:intl/intl.dart';
-import 'package:logging/logging.dart';
+library bwu_log;
 
-part 'src/log.dart';
+export 'src/log.dart';
