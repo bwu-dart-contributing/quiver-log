@@ -1,5 +1,9 @@
-BWU Log
-======
+#BWU Log
+
+[![Star this Repo](https://img.shields.io/github/stars/bwu-dart/bwu_log.svg?style=flat)](https://github.com/bwu-dart/bwu_log)
+[![Pub Package](https://img.shields.io/pub/v/bwu_log.svg?style=flat)](https://pub.dartlang.org/packages/bwu_log)
+[![Build Status](https://travis-ci.org/bwu-dart/bwu_log.svg?branch=master)](https://travis-ci.org/bwu-dart/bwu_log)
+[![Coverage Status](https://coveralls.io/repos/bwu-dart/bwu_log/badge.svg?branch=master)](https://coveralls.io/r/bwu-dart/bwu_log)
 
 BWU log is a set of logging utilities that make it easy to configure and
 manage Dart's built in logging capabilities.
@@ -7,7 +11,7 @@ manage Dart's built in logging capabilities.
 BWU log is a fork of quiver-log
 
 
-# The Basics
+##The Basics
 
 Dart's built-in logging utilities are fairly low level. This means each time you
 start a new project you have to copy/paste a bunch of logging configuration

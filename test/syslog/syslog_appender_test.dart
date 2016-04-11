@@ -26,8 +26,7 @@ main() {
       appender.attachLogger(logger);
     });
 
-    tearDown(() {
-    });
+    tearDown(() {});
 
     test('should create PRI "<0>"', () {
       formatter.messages = [

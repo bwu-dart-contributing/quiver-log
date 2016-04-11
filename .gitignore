@@ -3,4 +3,6 @@ pubspec.lock
 .pub
 .idea
 build
+.packages
+**/packages/
 

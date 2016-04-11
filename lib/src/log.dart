@@ -119,10 +119,10 @@ class BasicFilter {
 
   bool call(LogRecord record) {
     bool include = true;
-    if(excludes != null && excludes.any((excl) => excl.match(record))) {
+    if (excludes != null && excludes.any((excl) => excl.match(record))) {
       include = false;
     }
-    if(includes != null && includes.any((incl) => incl.match(record))) {
+    if (includes != null && includes.any((incl) => incl.match(record))) {
       include = true;
     }
     return include;
@@ -144,19 +144,21 @@ class FilterRule {
   const FilterRule({this.levels, this.loggerNamePattern, this.messagePattern});
 
   bool match(LogRecord record) {
-    if(levels != null && !levels.contains(record.level)) {
+    if (levels != null && !levels.contains(record.level)) {
       return false;
     }
-    if(loggerNamePattern != null && loggerNamePattern.allMatches(record.loggerName).isEmpty) {
+    if (loggerNamePattern != null &&
+        loggerNamePattern.allMatches(record.loggerName).isEmpty) {
       return false;
     }
-    if(messagePattern != null && messagePattern.allMatches(record.message).isEmpty) {
+    if (messagePattern != null &&
+        messagePattern.allMatches(record.message).isEmpty) {
       return false;
     }
-    if(messagePattern != null && messagePattern.allMatches(record.message).isEmpty) {
+    if (messagePattern != null &&
+        messagePattern.allMatches(record.message).isEmpty) {
       return false;
     }
     return true;
   }
 }
-
