@@ -1,10 +1,10 @@
 name: bwu_log
-version: 0.1.1
+version: 0.1.2
 authors:
   - Günter Zöchbauer <guenter@gzoechbauer.com>
   - Adam Bender <bendera@google.com>
 description: A logging utility for Dart (fork of quiver-log)
-homepage: https://github.com/bwu-dart/bwu-log
+homepage: https://github.com/bwu-dart/bwu_log
 environment:
   sdk: '>=1.12.0 <2.0.0'
 dependencies:
