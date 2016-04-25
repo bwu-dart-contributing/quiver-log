@@ -24,7 +24,7 @@ packages:
       name: async
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.9.0"
+    version: "1.10.0"
   barback:
     description:
       name: barback
@@ -42,7 +42,7 @@ packages:
       name: bwu_grinder_tasks
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.1.1-dev.2"
+    version: "0.1.1-dev.3"
   charcode:
     description:
       name: charcode
@@ -72,7 +72,7 @@ packages:
       name: crypto
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.0"
+    version: "1.1.0"
   csslib:
     description:
       name: csslib
@@ -114,7 +114,7 @@ packages:
       name: intl
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.12.7"
+    version: "0.12.7+1"
   logging:
     description:
       name: logging
@@ -295,4 +295,4 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.1.8"
-sdk: ">=1.14.0 <1.17.0"
+sdk: ">=1.16.0-dev.5.0 <1.17.0"
