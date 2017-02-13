@@ -39,7 +39,7 @@ class SimpleLogger implements Logger {
   Stream<LogRecord> get onRecord => _controller.stream;
 
   @override
-  void info(String msg, [Object message, StackTrace stackTrace]) =>
+  void info(dynamic msg, [Object message, StackTrace stackTrace]) =>
       _controller.add(new LogRecord(Level.INFO, msg, 'simple'));
 
   @override
