@@ -1,5 +1,6 @@
 library bwu_log.test.syslog_appender;
 
+import 'dart:async' show Future;
 import 'package:test/test.dart';
 import 'package:bwu_log/server_appenders.dart';
 import '../simple_logger.dart';
@@ -164,7 +165,9 @@ class SyslogTestTransport extends SyslogTransport {
   bool get isOpen => true;
 
   @override
-  void open() {}
+  Future<Null> open() {
+    return null;
+  }
 
   Function callback;
 

@@ -4,11 +4,8 @@ import 'dart:io' as io;
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:bwu_log/bwu_log.dart' as log;
-//import 'package:bwu_log/bwu_log_io.dart';
 import 'package:logging/logging.dart';
-import 'package:intl/intl.dart';
 import 'dart:async' show Future;
-//import 'package:collection/wrappers.dart';
 
 enum TransgressionAction {
   split,
@@ -22,7 +19,7 @@ enum Protocol {
 
 abstract class SyslogTransport {
   bool get isOpen;
-  void open();
+  Future<Null> open();
   void close();
   void send(List<int> data);
 }
@@ -66,7 +63,7 @@ class SyslogUdpTransport implements SyslogTransport {
             : TransgressionAction.split;
 
   @override
-  Future open() async {
+  Future<Null> open() async {
     try {
       _resolvedHost = await _getHost(this.host);
       if (_resolvedHost == null) {
@@ -106,8 +103,6 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
       : transport = transport ?? new SyslogUdpTransport(),
         super(formatter ?? new SimpleSyslogFormatter(), filter: filter);
 
-  static final DateFormat _dateFormat = new DateFormat("MMM dd hh:mm:ss");
-
   @override
   void append(LogRecord record, log.Formatter<SyslogMessage> formatter) {
     final SyslogMessage msg = formatter(record);
@@ -115,17 +110,6 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
       final header = new io.BytesBuilder();
 
       _addHeader(header, msg);
-
-      if (msg.tag != null) {
-        header.add(msg.tag
-            .substring(0,
-                math.min(31 - msg.messageId.toString().length, msg.tag.length))
-            .codeUnits);
-      }
-      header
-        ..add('-'.codeUnits)
-        ..add(msg.messageId.toString().codeUnits)
-        ..add(':'.codeUnits);
 
       int pos = 0;
       final maxPartLen = maxMessageLength - header.length;
@@ -138,8 +122,6 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
         pos += len;
         message.add(msgPart.codeUnits);
         _send(new Uint8List.fromList(message.toBytes()));
-        //_send(new Uint8List.fromList('<34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - BOM\'su root\' failed for lonvick on /dev/pts/8'.codeUnits));
-
       }
     }
   }
@@ -148,12 +130,13 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
   void _addHeader(io.BytesBuilder header, SyslogMessage msg) {
     _addPri(header, msg.facility, msg.severity);
     _addVersion(header);
-    header.add(_space);
     _addTimeStamp(header, msg.timeStamp);
-    header.add(_space);
     _addHostname(header, msg.hostname);
-    header.add(_space);
     _addAppName(header, msg.appName);
+    _addProcessId(header, msg.processId);
+    _addStructuredData(header, null);
+    _addMessageId(header, msg.messageId);
+    _addTag(header, msg.tag);
     header.add(_space);
   }
 
@@ -166,15 +149,7 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
 
   void _addTimeStamp(io.BytesBuilder header, DateTime timeStamp) {
     // RFC 5424
-    header.add(timeStamp.toUtc().toIso8601String().codeUnits);
-
-    // RFC 3164
-//    String ts = _dateFormat.format(timeStamp);
-//    if (ts[4] == '0') {
-//      ts = ts.replaceRange(4, 5, ' ');
-//    }
-//    header.add(ts.codeUnits);
-//    header.add(' '.codeUnits);
+    header..add(_space)..add(timeStamp.toUtc().toIso8601String().codeUnits);
   }
 
   void _addVersion(io.BytesBuilder header) {
@@ -184,18 +159,58 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
   void _addHostname(io.BytesBuilder header, String hostname) {
     /// if FQN is provided extract the hostname
     if (hostname != null) {
-      header.add(hostname.split('.').first.codeUnits);
+      // TODO(zoechi) don't do this for IP addresses
+      header.add(' ${hostname.split('.').first}'.codeUnits);
+    } else {
+      header.add(' -'.codeUnits);
     }
-    header.add(' '.codeUnits);
   }
 
-  void _addAppName(io.BytesBuilder header, String appName) {}
+  void _addAppName(io.BytesBuilder header, String appName) {
+    if (appName != null) {
+      header.add(' $appName'.codeUnits);
+    } else {
+      header.add(' -'.codeUnits);
+    }
+  }
+
+  void _addProcessId(io.BytesBuilder header, String processId) {
+    if (processId != null) {
+      header.add(' $processId'.codeUnits);
+    } else {
+      header.add(' -'.codeUnits);
+    }
+  }
+
+  void _addStructuredData(io.BytesBuilder header, String data) {
+    // TODO(zoechi) not yet supported
+//    if (data != null) {
+//      header.add(' $data '.codeUnits);
+//    } else {
+    header.add(' -'.codeUnits);
+//    }
+  }
+
+  void _addMessageId(io.BytesBuilder header, int messageId) {
+    if (messageId != null) {
+      header.add(' $messageId'.codeUnits);
+    } else {
+      header.add(' -'.codeUnits);
+    }
+  }
+
+  void _addTag(io.BytesBuilder header, String tag) {
+    if (tag != null) {
+      header.add(' $tag |'.codeUnits);
+    } else {
+      header.add(' |'.codeUnits);
+    }
+  }
 
   Future<Null> _send(List<int> bytes) async {
     if (!transport.isOpen) {
-      transport.open();
+      await transport.open();
     }
-    // print(new String.fromCharCodes(bytes));
     transport.send(bytes);
   }
 }
@@ -319,26 +334,38 @@ const String splitter = '\n>>>\n';
 abstract class SyslogFormatter extends log.FormatterBase<SyslogMessage> {}
 
 class SimpleSyslogFormatter extends SyslogFormatter {
+  final Facility facility;
+  final String applicationName;
+
+  SimpleSyslogFormatter(
+      {Facility facility = Facility.user, this.applicationName})
+      : facility = facility ?? Facility.user;
+
+  Severity severity(LogRecord record) {
+    if (record.level.value >= 1600) {
+      return Severity.emergency;
+    } else if (record.level.value >= 1400) {
+      return Severity.alert;
+    } else if (record.level.value >= Level.SHOUT.value) {
+      return Severity.critical;
+    } else if (record.level.value >= Level.SEVERE.value) {
+      return Severity.error;
+    } else if (record.level.value >= Level.WARNING.value) {
+      return Severity.warning;
+    } else if (record.level.value >= Level.INFO.value) {
+      return Severity.notice;
+    } else if (record.level.value >= Level.CONFIG.value) {
+      return Severity.informational;
+    } else if (record.level.value <= Level.FINE.value) {
+      return Severity.debug;
+    }
+    throw new Exception('This line must not be reached');
+  }
+
   @override
   SyslogMessage call(LogRecord record) {
-    Severity severity;
-    if (record.level.value >= 1600) {
-      severity = Severity.emergency;
-    } else if (record.level.value >= 1400) {
-      severity = Severity.alert;
-    } else if (record.level.value >= Level.SHOUT.value) {
-      severity = Severity.critical;
-    } else if (record.level.value >= Level.SEVERE.value) {
-      severity = Severity.error;
-    } else if (record.level.value >= Level.WARNING.value) {
-      severity = Severity.warning;
-    } else if (record.level.value >= Level.INFO.value) {
-      severity = Severity.notice;
-    } else if (record.level.value >= Level.CONFIG.value) {
-      severity = Severity.informational;
-    } else if (record.level.value >= Level.FINE.value) {
-      severity = Severity.debug;
-    }
+    final severity = this.severity(record);
+
     String message = record.message;
     if (message == null) {
       message = '';
@@ -354,13 +381,13 @@ class SimpleSyslogFormatter extends SyslogFormatter {
 
     return new SyslogMessage(
         severity,
-        Facility.user,
+        facility,
         record.time,
         io.Platform.localHostname,
         tag,
         record.sequenceNumber,
         message,
-        null,
+        applicationName,
         record.zone['LOGGING_ZONE_NAME'] as String);
   }
 }

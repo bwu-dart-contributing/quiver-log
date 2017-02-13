@@ -14,7 +14,6 @@
 
 library bwu_log.test.formatter;
 
-// import 'package:intl/intl.dart';
 import 'package:logging/logging.dart';
 import 'package:bwu_log/bwu_log.dart';
 import 'package:test/test.dart';
@@ -23,7 +22,6 @@ void main() {
   group('BasicLogFormatter', () {
     test('correctly formats LogRecord', () {
       final record = new LogRecord(Level.INFO, 'formatted message!', 'root');
-      // var dateFormat = new DateFormat("MMyy HH:mm:ss.S"); // TODO check what this was intended for
       final formatRegexp = new RegExp(
           r'\d\d \d\d:\d\d:\d\d.\d\d\d INFO \d root+ formatted message!');
       print(basicLogFormatter.call(record));
