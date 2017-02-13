@@ -5,11 +5,11 @@ import 'package:bwu_log/server_appenders.dart';
 import '../simple_logger.dart';
 import 'package:logging/logging.dart';
 
-main() {
+void main() {
   group('syslog_appender', () {
     test('should not fail', () {
-      var appender = new SyslogAppender();
-      var logger = new SimpleLogger();
+      final appender = new SyslogAppender();
+      final logger = new SimpleLogger();
       appender.attachLogger(logger);
 
       logger.info('test message');
@@ -22,6 +22,9 @@ main() {
     SyslogTestFormatter formatter;
     Logger logger;
     setUp(() {
+      transport = new SyslogTestTransport();
+      formatter = new SyslogTestFormatter();
+      appender = new SyslogAppender(formatter: formatter, transport: transport);
       logger = new SimpleLogger();
       appender.attachLogger(logger);
     });
@@ -34,7 +37,7 @@ main() {
             'hostname', 'tag', 1, 'message')
       ];
 
-      transport.callback = expectAsync(() {
+      transport.callback = expectAsync0<Function>(() {
         final expectedPri = '<0>'.codeUnits;
         expect(transport.messages[0].sublist(0, expectedPri.length),
             orderedEquals(expectedPri));
@@ -49,7 +52,7 @@ main() {
             'hostname', 'tag', 1, 'message', 'test')
       ];
 
-      transport.callback = expectAsync(() {
+      transport.callback = expectAsync0<Null>(() {
         final expectedPri = '<165>'.codeUnits;
         expect(transport.messages[0].sublist(0, expectedPri.length),
             orderedEquals(expectedPri));
@@ -64,7 +67,7 @@ main() {
             'hostname', 'tag', 1, 'message')
       ];
 
-      transport.callback = expectAsync(() {
+      transport.callback = expectAsync0<Null>(() {
         final expectedPri = '<165>1'.codeUnits;
         expect(transport.messages[0].sublist(0, expectedPri.length),
             orderedEquals(expectedPri));
@@ -80,7 +83,7 @@ main() {
             'hostname', 'tag', 1, 'message')
       ];
 
-      transport.callback = expectAsync(() {
+      transport.callback = expectAsync0<Null>(() {
         final expectedPri = '<165>1 1985-04-12T23:20:50.520Z'.codeUnits;
         print(new String.fromCharCodes(transport.messages[0]));
         expect(transport.messages[0].sublist(0, expectedPri.length),
@@ -99,7 +102,7 @@ main() {
             'hostname', 'tag', 1, 'message')
       ];
 
-      transport.callback = expectAsync(() {
+      transport.callback = expectAsync0<Null>(() {
         final expectedPri = '<165>1 1985-04-12T23:20:50.520Z'.codeUnits;
         print(new String.fromCharCodes(transport.messages[0]));
         expect(transport.messages[0].sublist(0, expectedPri.length),
@@ -119,7 +122,7 @@ main() {
             'hostname', 'tag', 1, 'message')
       ];
 
-      transport.callback = expectAsync(() {
+      transport.callback = expectAsync0<Null>(() {
         final expectedPri = '<165>1 2003-10-11T22:14:15.003Z'.codeUnits;
         print(new String.fromCharCodes(transport.messages[0]));
         expect(transport.messages[0].sublist(0, expectedPri.length),
@@ -130,6 +133,7 @@ main() {
     });
 
     // Dart doesn't support more than 3 digits in milliseconds.
+    // TODO(zoechi) seems now it does
     test('should create correct UTC TIMESTAMP with 6 digit milliseconds', () {
       final timeStamp = DateTime.parse('2003-08-24T05:14:15.000003-07:00');
       formatter.messages = [
@@ -137,10 +141,10 @@ main() {
             'hostname', 'tag', 1, 'message')
       ];
 
-      transport.callback = expectAsync(() {
+      transport.callback = expectAsync0<Null>(() {
         // This should have been the result according to the RFC5424 6.2.3.1
         // final expectedPri = '<165>1 2003-08-24T05:14:15.000003-07:00'.codeUnits;
-        final expectedPri = '<165>1 2003-08-24T12:14:15.000Z'.codeUnits;
+        final expectedPri = '<165>1 2003-08-24T12:14:15.000003Z'.codeUnits;
         print(new String.fromCharCodes(transport.messages[0]));
         expect(transport.messages[0].sublist(0, expectedPri.length),
             orderedEquals(expectedPri));
@@ -187,6 +191,6 @@ class SyslogTestFormatter extends SyslogFormatter {
     while (_counter < _messages.length) {
       return _messages[_counter++];
     }
-    throw 'No more messages';
+    throw new Exception('No more messages');
   }
 }

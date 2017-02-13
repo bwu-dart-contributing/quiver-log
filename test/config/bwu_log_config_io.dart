@@ -5,19 +5,19 @@ import 'package:logging/logging.dart';
 import 'package:bwu_log/bwu_log.dart';
 import 'package:bwu_log/src/syslog_appender.dart';
 
-const logConfigEnvVar = 'BWU_LOG_CONFIG';
+const String logConfigEnvVar = 'BWU_LOG_CONFIG';
 
-initLogging([String envVar = logConfigEnvVar]) {
+void initLogging([String envVar = logConfigEnvVar]) {
   switch (configNameFromEnvironment(envVar)) {
     case 'development':
       final appender = new SyslogAppender(
           formatter: new SimpleSyslogFormatter(),
           transport: new SyslogUdpTransport(),
-          filter: const BasicFilter(
-              excludes: const [const FilterRule(loggerNamePattern: '.')],
-              includes: const [
-        const FilterRule(levels: const [Level.SHOUT, Level.SEVERE])
-      ]));
+          filter: const BasicFilter(excludes: const [
+            const FilterRule(loggerNamePattern: '.')
+          ], includes: const [
+            const FilterRule(levels: const [Level.SHOUT, Level.SEVERE])
+          ]));
       appender.attachLogger(Logger.root);
       break;
 
@@ -34,7 +34,7 @@ initLogging([String envVar = logConfigEnvVar]) {
 
     //case 'default':
     default:
-      final appender = new PrintAppender(BASIC_LOG_FORMATTER);
+      final appender = new PrintAppender(basicLogFormatter);
       appender.attachLogger(Logger.root);
       // Logger.root.level = Level.INFO;
       break;

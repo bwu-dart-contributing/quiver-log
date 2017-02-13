@@ -1,10 +1,10 @@
 library bwu_log.test.config;
 
 import 'package:test/test.dart';
-import 'package:bwu_log/src/syslog_appender.dart';
+//import 'package:bwu_log/src/syslog_appender.dart';
 import 'bwu_log_config_io.dart';
 
-main() {
+void main() {
   group('file config', () {
     test('should load from file', () {
       initLogging();

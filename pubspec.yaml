@@ -1,20 +1,19 @@
 name: bwu_log
-version: 1.0.3
+version: 2.0.0-alpha.0
 authors:
 - Günter Zöchbauer <guenter@gzoechbauer.com>
-- Adam Bender <bendera@google.com>
 description: A logging utility for Dart
 homepage: https://github.com/bwu-dart/bwu_log
 environment:
-  sdk: '>=1.9.0'
+  sdk: '>=1.22.0'
 
 dependencies:
-  intl: ^0.12.3
+  intl: ^0.14.0
   logging: ^0.11.0
   path: '^1.3.5'
 
 dev_dependencies:
-  bwu_utils_dev: ^0.1.0-dev.9
+  bwu_grinder_tasks: ^0.1.1-dev.5
   mock: ^0.12.0
   test: ^0.12.0
 

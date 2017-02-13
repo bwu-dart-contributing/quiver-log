@@ -18,11 +18,11 @@ import 'package:bwu_log/bwu_log.dart';
 import 'package:test/test.dart';
 import 'simple_logger.dart';
 
-main() {
+void main() {
   group('Appender', () {
     test('Appends handles log message and formats before output', () {
-      var appender = new InMemoryListAppender(new SimpleStringFormatter());
-      var logger = new SimpleLogger();
+      final appender = new InMemoryListAppender(new SimpleStringFormatter());
+      final logger = new SimpleLogger();
       appender.attachLogger(logger);
 
       const message = 'test message';

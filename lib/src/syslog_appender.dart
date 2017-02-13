@@ -4,15 +4,21 @@ import 'dart:io' as io;
 import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:bwu_log/bwu_log.dart' as log;
-import 'package:bwu_log/bwu_log_io.dart';
+//import 'package:bwu_log/bwu_log_io.dart';
 import 'package:logging/logging.dart';
 import 'package:intl/intl.dart';
 import 'dart:async' show Future;
-import 'package:collection/wrappers.dart';
+//import 'package:collection/wrappers.dart';
 
-enum TransgressionAction { split, truncate, }
+enum TransgressionAction {
+  split,
+  truncate,
+}
 
-enum Protocol { tcp, udp, }
+enum Protocol {
+  tcp,
+  udp,
+}
 
 abstract class SyslogTransport {
   bool get isOpen;
@@ -22,32 +28,36 @@ abstract class SyslogTransport {
 }
 
 class SyslogUdpTransport implements SyslogTransport {
+  @override
   bool get isOpen => _socket != null;
   io.RawDatagramSocket _socket;
-  final host;
+  final dynamic host;
   final int port;
   final int maxMessageLength;
-  final int transgressionAction;
+  final TransgressionAction transgressionAction;
 
   io.InternetAddress _resolvedHost;
 
-  static Future<io.InternetAddress> _getHost(host) async {
+  static Future<io.InternetAddress> _getHost(dynamic host) async {
     if (host is io.InternetAddress) {
       return host;
     }
     if (host != null) {
       try {
-        return new io.InternetAddress(host);
+        return new io.InternetAddress(host as String);
       } catch (_) {}
       try {
-        return (await io.InternetAddress.lookup(host)).first;
+        return (await io.InternetAddress.lookup(host as String)).first;
       } catch (_) {}
     }
     return null;
   }
 
-  SyslogUdpTransport({this.host, this.port: 514, this.maxMessageLength: 2048,
-      this.transgressionAction: TransgressionAction.split})
+  SyslogUdpTransport(
+      {dynamic host,
+      int port: 514,
+      int maxMessageLength: 2048,
+      TransgressionAction transgressionAction: TransgressionAction.split})
       : host = host != null ? host : io.InternetAddress.LOOPBACK_IP_V4,
         port = port != null ? port : 514,
         maxMessageLength = maxMessageLength != null ? maxMessageLength : 2048,
@@ -55,26 +65,29 @@ class SyslogUdpTransport implements SyslogTransport {
             ? transgressionAction
             : TransgressionAction.split;
 
+  @override
   Future open() async {
     try {
       _resolvedHost = await _getHost(this.host);
       if (_resolvedHost == null) {
         return;
       }
-      _socket = await io.RawDatagramSocket.bind(
-          await io.InternetAddress.ANY_IP_V4, 0);
+      _socket =
+          await io.RawDatagramSocket.bind(io.InternetAddress.ANY_IP_V4, 0);
     } catch (e) {
       // Prevent logging from crashing the app
       // TODO(zoechi) find some way to handle this properly
     }
   }
 
+  @override
   Future close() async {
     _socket.close();
-    await _socket.drain();
+    await _socket.drain<dynamic>();
     _socket = null;
   }
 
+  @override
   int send(List<int> data) {
     if (isOpen) {
       return _socket.send(data, _resolvedHost, port);
@@ -84,37 +97,41 @@ class SyslogUdpTransport implements SyslogTransport {
 }
 
 class SyslogAppender extends log.Appender<SyslogMessage> {
-  SyslogFormatter get formatter => super.formatter;
+  @override
+  SyslogFormatter get formatter => super.formatter as SyslogFormatter;
   final SyslogTransport transport;
 
-  SyslogAppender({SyslogFormatter formatter, this.transport, log.Filter filter})
-      : formatter = formatter != null ? formatter : new SimpleSyslogFormatter(),
-        transport = transport != null ? transport : new SyslogUdpTransport(),
-        super(formatter, filter: filter);
+  SyslogAppender(
+      {SyslogFormatter formatter, SyslogTransport transport, log.Filter filter})
+      : transport = transport ?? new SyslogUdpTransport(),
+        super(formatter ?? new SimpleSyslogFormatter(), filter: filter);
 
   static final DateFormat _dateFormat = new DateFormat("MMM dd hh:mm:ss");
 
+  @override
   void append(LogRecord record, log.Formatter<SyslogMessage> formatter) {
     final SyslogMessage msg = formatter(record);
     if (msg.message.isNotEmpty) {
-      io.BytesBuilder header = new io.BytesBuilder();
+      final header = new io.BytesBuilder();
 
       _addHeader(header, msg);
 
       if (msg.tag != null) {
-        header.add(msg.tag.substring(0, math.min(
-            31 - msg.messageId.toString().length, msg.tag.length)).codeUnits);
+        header.add(msg.tag
+            .substring(0,
+                math.min(31 - msg.messageId.toString().length, msg.tag.length))
+            .codeUnits);
       }
-      header.add('-'.codeUnits);
-      header.add(msg.messageId.toString().codeUnits);
-      header.add(':'.codeUnits);
+      header
+        ..add('-'.codeUnits)
+        ..add(msg.messageId.toString().codeUnits)
+        ..add(':'.codeUnits);
 
       int pos = 0;
       final maxPartLen = maxMessageLength - header.length;
 
       while (pos < msg.message.length) {
-        io.BytesBuilder message = new io.BytesBuilder();
-        message.add(header.toBytes());
+        final message = new io.BytesBuilder()..add(header.toBytes());
 
         final len = math.min(msg.message.length - pos, maxPartLen);
         final msgPart = msg.message.substring(pos, len);
@@ -141,9 +158,10 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
   }
 
   void _addPri(io.BytesBuilder header, Facility facility, Severity severity) {
-    header.add('<'.codeUnits);
-    header.add(((facility.index << 3) + severity.index).toString().codeUnits);
-    header.add('>'.codeUnits);
+    header
+      ..add('<'.codeUnits)
+      ..add(((facility.index << 3) + severity.index).toString().codeUnits)
+      ..add('>'.codeUnits);
   }
 
   void _addTimeStamp(io.BytesBuilder header, DateTime timeStamp) {
@@ -175,7 +193,7 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
 
   Future<Null> _send(List<int> bytes) async {
     if (!transport.isOpen) {
-      await transport.open();
+      transport.open();
     }
     // print(new String.fromCharCodes(bytes));
     transport.send(bytes);
@@ -196,50 +214,73 @@ enum Severity {
 enum Facility {
   /// 0 - kernel messages
   kern,
+
   /// 1 - user-level messages
   user,
+
   /// 2 - mail system
   mail,
+
   /// 3 - system daemons
   daemon,
+
   /// 4 - security/authorization messages
   auth,
+
   /// 5 - messages generated internally by syslogd
   syslog,
+
   /// 6 - line printer subsystem
   lpr,
+
   /// 7 - network news subsystem
   news,
+
   /// 8 - UUCP subsystem
   uucp,
+
   /// 9 - clock daemon
   clock,
+
   /// 10 - security/authorization messages
   authpriv,
+
   /// 11 - FTP daemon
   ftp,
+
   /// 12 - NTP subsystem
   ntp,
+
   /// 13 - log audit
   logAudit,
+
   /// 14 - log alert
   logAlert,
+
   /// 15 - clock daemon (note 2)
   cron,
+
   /// 16 - local use 0 (local0)
   local0,
+
   /// 17 - local use 0 (local1)
   local1,
+
   /// 18 - local use 0 (local2)
   local2,
+
   /// 19 - local use 0 (local3)
   local3,
+
   /// 20 - local use 0 (local4)
   local4,
+
   /// 21 - local use 0 (local5)
   local5,
+
   /// 22 - local use 0 (local6)
   local6,
+
   /// 23 - local use 0 (local7)
   local7,
 }
@@ -278,6 +319,7 @@ const String splitter = '\n>>>\n';
 abstract class SyslogFormatter extends log.FormatterBase<SyslogMessage> {}
 
 class SimpleSyslogFormatter extends SyslogFormatter {
+  @override
   SyslogMessage call(LogRecord record) {
     Severity severity;
     if (record.level.value >= 1600) {
@@ -302,16 +344,23 @@ class SimpleSyslogFormatter extends SyslogFormatter {
       message = '';
     }
     if (record.error != null) {
-      message = '${message}${splitter}${record.error}';
+      message = '$message$splitter${record.error}';
     }
     if (record.stackTrace != null) {
-      message = '${message}${splitter}${record.stackTrace}';
+      message = '$message$splitter${record.stackTrace}';
     }
 
-    String tag = record.loggerName;
+    final tag = record.loggerName;
 
-    return new SyslogMessage(severity, Facility.user, record.time,
-        io.Platform.localHostname, tag, record.sequenceNumber, message, null,
-        record.zone['LOGGING_ZONE_NAME']);
+    return new SyslogMessage(
+        severity,
+        Facility.user,
+        record.time,
+        io.Platform.localHostname,
+        tag,
+        record.sequenceNumber,
+        message,
+        null,
+        record.zone['LOGGING_ZONE_NAME'] as String);
   }
 }

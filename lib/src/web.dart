@@ -43,7 +43,7 @@ class WebAppender extends Appender<Object> {
       new WebAppender(formatter, window.console);
 
   @override
-  void append(LogRecord record, Formatter<String> formatter) {
+  void append(LogRecord record, covariant Formatter<String> formatter) {
     _levelToOutputFunction[record.level](formatter(record));
   }
 }
