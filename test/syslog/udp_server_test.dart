@@ -27,7 +27,7 @@ void main() {
         ..warning('udp test 5')
         ..severe('udp test 6')
         ..shout('udp test 7');
-//    });
-    }, skip: 'run only manually where rsyslogd is available');
+    });
+//    }, skip: 'run only manually where rsyslogd is available');
   });
 }

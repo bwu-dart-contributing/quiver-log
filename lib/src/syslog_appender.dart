@@ -106,19 +106,23 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
   @override
   void append(LogRecord record, log.Formatter<SyslogMessage> formatter) {
     final SyslogMessage msg = formatter(record);
-    if (msg.message.isNotEmpty) {
+    final content = '${msg.tag} | ${msg.message}';
+    if (content.isNotEmpty) {
       final header = new io.BytesBuilder();
 
       _addHeader(header, msg);
 
+      _addStructuredData(header, null);
+      header.add(_space);
+
       int pos = 0;
       final maxPartLen = maxMessageLength - header.length;
 
-      while (pos < msg.message.length) {
+      while (pos < content.length) {
         final message = new io.BytesBuilder()..add(header.toBytes());
 
-        final len = math.min(msg.message.length - pos, maxPartLen);
-        final msgPart = msg.message.substring(pos, len);
+        final len = math.min(content.length - pos, maxPartLen);
+        final msgPart = content.substring(pos, len);
         pos += len;
         message.add(msgPart.codeUnits);
         _send(new Uint8List.fromList(message.toBytes()));
@@ -134,10 +138,7 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
     _addHostname(header, msg.hostname);
     _addAppName(header, msg.appName);
     _addProcessId(header, msg.processId);
-    _addStructuredData(header, null);
     _addMessageId(header, msg.messageId);
-    _addTag(header, msg.tag);
-    header.add(_space);
   }
 
   void _addPri(io.BytesBuilder header, Facility facility, Severity severity) {
@@ -196,14 +197,6 @@ class SyslogAppender extends log.Appender<SyslogMessage> {
       header.add(' $messageId'.codeUnits);
     } else {
       header.add(' -'.codeUnits);
-    }
-  }
-
-  void _addTag(io.BytesBuilder header, String tag) {
-    if (tag != null) {
-      header.add(' $tag |'.codeUnits);
-    } else {
-      header.add(' |'.codeUnits);
     }
   }
 
@@ -388,6 +381,6 @@ class SimpleSyslogFormatter extends SyslogFormatter {
         record.sequenceNumber,
         message,
         applicationName,
-        record.zone['LOGGING_ZONE_NAME'] as String);
+        record.zone['LOGGING_ZONE_NAME'] as String ?? '${io.pid}');
   }
 }
